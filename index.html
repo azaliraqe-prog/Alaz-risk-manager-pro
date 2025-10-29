@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>العز للإدارة المالية - مدير المخاطر</title>
+  <meta name="theme-color" content="#0f1115">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo"></span><b>العز للإدارة المالية</b><small>مدير مخاطر للمتداول المحترف</small></div>
+    <div class="actions">
+      <button id="btnInstall" class="ghost" hidden>تثبيت التطبيق</button>
+      <a class="ghost" href="https://instagram.com/ezaldeen.aldulami" target="_blank">@ezaldeen.aldulami</a>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="risk">مدير المخاطر</button>
+    <button class="tab-btn" data-tab="journal">سجل الصفقات</button>
+    <button class="tab-btn" data-tab="stats">الإحصائيات</button>
+    <button class="tab-btn" data-tab="backup">نسخ احتياطي</button>
+  </nav>
+
+  <main>
+    <!-- Risk Manager -->
+    <section id="tab-risk" class="tab active">
+      <div class="card">
+        <h2>⚖️ حساب حجم العقد لكل أزواج الفوركس</h2>
+        <p class="muted">أدخل البيانات بدقة. الحساب بالدولار USD. للأزواج المتقاطعة عدّل <b>قيمة النقطة/لوت</b> يدويًا حسب وسيطك.</p>
+        <div class="grid">
+          <label>زوج العملة
+            <input list="pairs" id="pair" placeholder="EURUSD / USDJPY / XAUUSD ...">
+            <datalist id="pairs">
+              <option value="EURUSD"></option><option value="GBPUSD"></option>
+              <option value="USDJPY"></option><option value="XAUUSD"></option>
+              <option value="US30"></option>
+            </datalist>
+          </label>
+          <label>السعر الحالي
+            <input type="number" step="0.00001" id="price" placeholder="1.08500 أو 157.25">
+          </label>
+          <label>رصيد الحساب (USD)
+            <input type="number" step="0.01" id="balance" value="5000">
+          </label>
+          <label>نسبة المخاطرة %
+            <input type="number" step="0.01" id="riskPct" value="1">
+          </label>
+          <label>عدد نقاط الوقف (Pips)
+            <input type="number" step="0.1" id="stopPips" value="20">
+          </label>
+          <label>قيمة النقطة لكل لوت (USD)
+            <input type="number" step="0.01" id="pipValue" value="10">
+          </label>
+          <div class="full">
+            <button id="calcBtn" class="primary">احسب حجم العقد</button>
+          </div>
+        </div>
+        <div id="riskOut" class="result" hidden></div>
+      </div>
+
+      <div class="card">
+        <h3>📝 إضافة صفقة إلى السجل</h3>
+        <div class="grid">
+          <label>الزوج<input id="tPair" placeholder="EURUSD"></label>
+          <label>الاتجاه
+            <select id="tSide"><option>BUY</option><option>SELL</option></select>
+          </label>
+          <label>الدخول<input id="tEntry" type="number" step="0.00001"></label>
+          <label>وقف الخسارة SL<input id="tSL" type="number" step="0.00001"></label>
+          <label>جني الربح TP<input id="tTP" type="number" step="0.00001"></label>
+          <label>اللوت<input id="tLot" type="number" step="0.001"></label>
+          <label>النتيجة
+            <select id="tRes">
+              <option value="PENDING">معلقة</option>
+              <option value="WIN">رابحة</option>
+              <option value="LOSS">خاسرة</option>
+              <option value="BE">تعادل</option>
+            </select>
+          </label>
+          <label class="full">ملاحظات<input id="tNotes" placeholder="مثال: كسر ترند + خبر CPI"></label>
+          <div class="full">
+            <button id="saveTrade" class="primary outline">حفظ الصفقة</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Journal -->
+    <section id="tab-journal" class="tab">
+      <div class="card">
+        <h2>📒 سجل الصفقات</h2>
+        <div class="toolbar">
+          <button id="btnCsv" class="ghost">تصدير CSV</button>
+          <button id="btnReport" class="ghost">تقرير PDF</button>
+          <button id="btnClear" class="danger">مسح السجل</button>
+        </div>
+        <div class="scroll">
+          <table class="journal">
+            <thead><tr>
+              <th>التاريخ</th><th>الزوج</th><th>اتجاه</th><th>دخول</th><th>SL</th><th>TP</th><th>لوت</th><th>النتيجة</th><th>R</th><th>PnL $</th><th>حذف</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section id="tab-stats" class="tab">
+      <div class="card">
+        <h2>📈 الإحصائيات</h2>
+        <div class="kpis">
+          <div class="kpi"><span id="kTotal">0</span><small>إجمالي</small></div>
+          <div class="kpi"><span id="kWin">0</span><small>رابحة</small></div>
+          <div class="kpi"><span id="kLoss">0</span><small>خاسرة</small></div>
+          <div class="kpi"><span id="kWR">0%</span><small>نسبة نجاح</small></div>
+          <div class="kpi"><span id="kNet">$0.00</span><small>صافي PnL</small></div>
+          <div class="kpi"><span id="kAvgR">0.00</span><small>متوسط R</small></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>منحنى الأداء (PnL متراكم)</h3>
+        <div class="chart-wrap"><canvas id="equity" width="1000" height="300"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>تقرير شهري</h3>
+        <div class="scroll">
+          <table class="journal">
+            <thead><tr>
+              <th>الشهر</th><th>الصفقات</th><th>رابحة</th><th>خاسرة</th><th>BE</th><th>نسبة النجاح</th><th>صافي $</th><th>متوسط R</th>
+            </tr></thead>
+            <tbody id="tbodyMonth"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Backup -->
+    <section id="tab-backup" class="tab">
+      <div class="card">
+        <h2>💾 نسخ احتياطي واسترجاع</h2>
+        <div class="grid">
+          <div class="full">
+            <button id="btnExportJson" class="ghost">تصدير JSON</button>
+          </div>
+          <label class="full">استرجاع من JSON
+            <input type="file" id="fileImport" accept="application/json">
+          </label>
+        </div>
+        <p class="muted">البيانات تُحفظ محليًا في جهازك (LocalStorage). استخدم JSON للنسخ الاحتياطي بين الأجهزة.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    تم التصميم من قبل <b>المهندس عزالدين الفحيمي</b> — Instagram:
+    <a href="https://instagram.com/ezaldeen.aldulami" target="_blank">ezaldeen.aldulami</a>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script>
+    // PWA install button
+    let deferredPrompt;
+    const btnInstall = document.getElementById('btnInstall');
+    window.addEventListener('beforeinstallprompt', (e)=>{
+      e.preventDefault(); deferredPrompt = e; btnInstall.hidden = false;
+    });
+    btnInstall?.addEventListener('click', async ()=>{
+      btnInstall.hidden = true;
+      if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+      else alert('Android: من قائمة ⋮ اختر Add to Home screen');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(console.error);
+      });
+    }
+  </script>
+</body>
+</html>
