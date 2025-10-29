@@ -1,44 +1,44 @@
-const CACHE_NAME = "alz-risk-manager-v1";
-const ASSETS = [
-  "./",
-  "./index.html",
-  "./styles.css",
-  "./script.js",
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png"
+const CACHE_NAME = 'alz-cache-v1';
+const URLS_TO_CACHE = [
+  './',
+  './index.html',
+  './styles.css',
+  './script.js',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Install SW and cache assets
-self.addEventListener("install", event => {
+// install: خزّن الملفات
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS_TO_CACHE))
   );
+  self.skipWaiting();
 });
 
-// Activate SW and remove old caches
-self.addEventListener("activate", event => {
+// activate: تنظيف الكاشات القديمة
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => (k === CACHE_NAME ? null : caches.delete(k))))
     )
   );
+  self.clients.claim();
 });
 
-// Fetch assets — offline support
-self.addEventListener("fetch", event => {
+// fetch: قدّم من الكاش أولاً ثم من الشبكة
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return (
-        response ||
-        fetch(event.request).catch(() =>
-          event.request.mode === "navigate" ? caches.match("./") : null
-        )
-      );
+    caches.match(event.request).then((cached) => {
+      const fetchPromise = fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => cached || Response.error());
+      return cached || fetchPromise;
     })
   );
 });
